@@ -1,0 +1,12 @@
+/build/
+
+coverage.out
+
+.env
+.env.*
+
+.idea/
+.vscode/
+*.swp
+
+*.log
