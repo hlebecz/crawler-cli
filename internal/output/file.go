@@ -12,7 +12,11 @@ type fileOutput struct {
 	File *os.File
 }
 
-func (f *fileOutput) Output(n model.Node) error {
+func NewFileOutput(f *os.File) fileOutput {
+	return fileOutput{File: f}
+}
+
+func (f fileOutput) Output(n model.Node) error {
 	body, err := json.Marshal(n)
 	if err != nil {
 		return fmt.Errorf("unable to marshal node: %w", err)
@@ -25,6 +29,6 @@ func (f *fileOutput) Output(n model.Node) error {
 	return nil
 }
 
-func NewFileOutput(f *os.File) fileOutput {
-	return fileOutput{File: f}
+func (f fileOutput) Close() error {
+	return f.File.Close()
 }
