@@ -1,4 +1,4 @@
-package output
+package fileoutput
 
 import (
 	"encoding/json"
@@ -8,15 +8,15 @@ import (
 	"github.com/hlebecz/crawler-cli/internal/model"
 )
 
-type fileOutput struct {
+type FileOutput struct {
 	File *os.File
 }
 
-func NewFileOutput(f *os.File) fileOutput {
-	return fileOutput{File: f}
+func New(f *os.File) FileOutput {
+	return FileOutput{File: f}
 }
 
-func (f fileOutput) Output(n model.Node) error {
+func (f FileOutput) Output(n []*model.Node) error {
 	body, err := json.Marshal(n)
 	if err != nil {
 		return fmt.Errorf("unable to marshal node: %w", err)
@@ -29,6 +29,6 @@ func (f fileOutput) Output(n model.Node) error {
 	return nil
 }
 
-func (f fileOutput) Close() error {
+func (f FileOutput) Close() error {
 	return f.File.Close()
 }

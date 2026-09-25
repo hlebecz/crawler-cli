@@ -1,6 +1,7 @@
 package config
 
 import (
+	"strings"
 	"time"
 
 	"github.com/urfave/cli"
@@ -11,25 +12,27 @@ import (
 type Urls []string
 
 type Config struct {
-	Urls           Urls
-	Depth          int
-	Timeout        time.Duration
-	RequestTimeout time.Duration
-	Output         string
-	Logger         logger.Config
+	Urls       Urls
+	Depth      uint
+	Timeout    time.Duration
+	ReqTimeout time.Duration
+	Output     string
+	Logger     logger.Config
+	Goroutines uint
 }
 
 func New(c cli.Context) (Config, error) {
 	return Config{
-		Urls:           c.StringSlice("urls"),
-		Depth:          c.Int("depth"),
-		Timeout:        c.Duration("timeout"),
-		RequestTimeout: c.Duration("request-timeout"),
-		Output:         c.String("output"),
+		Urls:       strings.Split(c.String("urls"), ","),
+		Depth:      c.Uint("depth"),
+		Timeout:    c.Duration("timeout"),
+		ReqTimeout: c.Duration("request-timeout"),
+		Output:     c.String("output"),
 		Logger: logger.Config{
 			Level:         c.String("log-level"),
 			PrettyConsole: true,
 			OutputFile:    c.String("log"),
 		},
+		Goroutines: c.Uint("go"),
 	}, nil
 }

@@ -1,4 +1,4 @@
-package cache
+package simplecache
 
 import "sync"
 
@@ -11,6 +11,6 @@ func (s SimpleCache) ShouldVisit(url string) bool {
 	return !loaded
 }
 
-func NewSimpleCache() SimpleCache {
+func New() SimpleCache {
 	return SimpleCache{&sync.Map{}}
 }
