@@ -2,7 +2,7 @@ package crawler
 
 import (
 	"errors"
-	"strings"
+	"net/url"
 
 	"github.com/rs/zerolog/log"
 
@@ -49,9 +49,17 @@ func (c *BaseCrawler) CreateEmptyNodes(links []string, depth uint, base string, 
 	return nodes, nil
 }
 
-func (c *BaseCrawler) checkBelonging(url string, startNodes []*model.Node) bool {
+func (c *BaseCrawler) checkBelonging(s string, startNodes []*model.Node) bool {
+	u, err := url.Parse(s)
+	if err != nil {
+		return false
+	}
 	for _, n := range startNodes {
-		if strings.Contains(url, n.Resource) {
+		nodeUrl, err := url.Parse(n.Resource)
+		if err != nil {
+			continue
+		}
+		if nodeUrl.Host == u.Host {
 			return true
 		}
 	}

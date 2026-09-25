@@ -41,9 +41,9 @@ func (c *Crawler) CrawlAll(ctx context.Context) {
 		if err != nil {
 			if !errors.Is(err, context.Canceled) && !errors.Is(err, context.DeadlineExceeded) {
 				log.Err(err).Msg("failed to crawl")
-				return
+				break
 			}
-			break
+			continue
 		}
 	}
 
