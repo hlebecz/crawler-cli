@@ -27,7 +27,13 @@ type BaseCrawler struct {
 	Cache  Cache
 }
 
-func (c *BaseCrawler) CreateEmptyNodes(links []string, depth uint, base string, startNodes []*model.Node) ([]model.Node, error) {
+func (c *BaseCrawler) CreateEmptyNodes(
+	links []string,
+	depth uint,
+	base string,
+	startNodes []*model.Node,
+) ([]model.Node, error) {
+
 	nodes := make([]model.Node, 0, len(links))
 
 	for _, l := range links {
