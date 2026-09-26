@@ -25,6 +25,9 @@ func New(maxConn int, reqTimeout time.Duration) Client {
 				TLSHandshakeTimeout:   10 * time.Second,
 				ResponseHeaderTimeout: 15 * time.Second,
 			},
+			CheckRedirect: func(req *http.Request, via []*http.Request) error {
+				return http.ErrUseLastResponse
+			},
 		},
 		sem: make(chan struct{}, maxConn),
 	}
