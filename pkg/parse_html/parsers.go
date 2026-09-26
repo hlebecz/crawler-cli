@@ -23,7 +23,7 @@ var (
 		".zip": {}, ".rar": {}, ".7z": {}, ".tar": {}, ".gz": {}, ".bz2": {},
 		".exe": {}, ".dmg": {}, ".apk": {},
 		".css": {}, ".js": {}, ".json": {}, ".xml": {}, ".rss": {}, ".atom": {},
-		".woff": {}, ".woff2": {}, ".ttf": {}, ".eot": {},
+		".woff": {}, ".woff2": {}, ".ttf": {}, ".eot": {}, ".jsp": {},
 	}
 
 	ExtError    = errors.New("unsupported file extension")

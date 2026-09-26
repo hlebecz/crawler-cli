@@ -34,7 +34,7 @@ func (c *BaseCrawler) CreateEmptyNodes(links []string, depth uint, base string, 
 		url, err := parse_html.ResolveURL(base, l)
 		if err != nil {
 			if errors.Is(err, parse_html.ExtError) || errors.Is(err, parse_html.SchemeError) {
-				log.Debug().Err(err).Str("url", url).Msg("skipping url")
+				log.Debug().Err(err).Str("url", l).Msg("skipping url")
 			} else {
 				log.Warn().Err(err).Str("url", l).Msg("failed to resolve url")
 			}
