@@ -35,7 +35,7 @@ go build -o build/crawler cmd/app/main.go
  
 ```bash
 ./build/crawler \
-  --urls https://google.com,https://example.com \
+  --urls https://books.toscrape.com/,https://www.bsuir.by/ \
   --depth 3 \
   --timeout 2m \
   --request-timeout 10s \
