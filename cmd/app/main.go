@@ -34,8 +34,7 @@ func main() {
 			return err
 		}
 		logger.Init(cfg.Logger)
-		internal.Run(ctx, cfg)
-		return nil
+		return internal.Run(ctx, cfg)
 	}
 	err := app.Run(os.Args)
 	if err != nil {

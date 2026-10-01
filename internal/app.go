@@ -2,6 +2,7 @@ package internal
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
@@ -16,13 +17,13 @@ import (
 	"github.com/hlebecz/crawler-cli/internal/crawler/recursive"
 )
 
-func Run(ctx context.Context, c config.Config) {
+func Run(ctx context.Context, c config.Config) error {
 	ctx, cancel := context.WithTimeout(ctx, c.Timeout)
 	defer cancel()
 
 	file, err := os.OpenFile(c.Output, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0o644)
 	if err != nil {
-		log.Fatal().Err(err).Msg("failed to create output file")
+		return fmt.Errorf("failed to create output file: %w", err)
 	}
 	out := fileoutput.New(file)
 
@@ -65,6 +66,8 @@ func Run(ctx context.Context, c config.Config) {
 
 	err = out.Close()
 	if err != nil {
-		log.Fatal().Err(err).Msg("failed to close output file")
+		return fmt.Errorf("failed to close output file: %w", err)
 	}
+
+	return nil
 }

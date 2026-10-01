@@ -75,7 +75,7 @@ func (c *Crawler) crawl(ctx context.Context, n *model.Node, startNodes []*model.
 		log.Warn().Err(err).Str("url", n.Resource).Msg("unable to parse title")
 	}
 
-	if n.Depth > c.Config.Depth {
+	if n.Depth >= c.Config.Depth {
 		//log.Debug().Msgf("Skipping crawl of depth %d", n.Depth)
 		return nil
 	}
