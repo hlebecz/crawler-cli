@@ -15,14 +15,6 @@ import (
 	"github.com/hlebecz/crawler-cli/pkg/parse_html"
 )
 
-type Output interface {
-	Output(n model.Node) error
-}
-
-type Cache interface {
-	ShouldVisit(url string) bool
-}
-
 type Crawler struct {
 	crawler.BaseCrawler
 }
@@ -56,15 +48,17 @@ func (c *Crawler) CrawlAll(ctx context.Context) {
 	closeIn := func() { closeOnce.Do(func() { close(unvisited) }) }
 
 	for _, u := range urls {
-		node := model.NewNode(u, "", 1)
+		node := model.NewNode(u, "", 0)
 		startNodes = append(startNodes, &node)
+		_ = c.Cache.ShouldVisit(u)
+		c.Count.Add(1)
 		pending.Add(1)
 		unvisited <- &node
 	}
 
 	for range c.Config.Goroutines {
 		wg.Go(func() {
-			c.worker(ctx, unvisited, visited, &pending, closeIn, startNodes)
+			c.worker(ctx, unvisited, visited, &pending, closeIn)
 		})
 	}
 
@@ -120,7 +114,6 @@ func (c *Crawler) worker(
 	visited chan<- *model.Node,
 	pending *atomic.Int64,
 	closeIn func(),
-	startNodes []*model.Node,
 ) {
 	for {
 		select {
@@ -136,7 +129,7 @@ func (c *Crawler) worker(
 						log.Error().Interface("panic", r).Str("url", n.Resource).Msg("worker panic")
 					}
 				}()
-				c.crawl(ctx, n, visited, pending, startNodes)
+				c.crawl(ctx, n, visited, pending)
 			}()
 			if pending.Add(-1) == 0 {
 				closeIn()
@@ -150,7 +143,6 @@ func (c *Crawler) crawl(
 	n *model.Node,
 	out chan<- *model.Node,
 	pending *atomic.Int64,
-	startNodes []*model.Node,
 ) {
 	resp, err := c.Client.Get(ctx, n.Resource)
 	if err != nil {
@@ -177,7 +169,7 @@ func (c *Crawler) crawl(
 		links, err := parse_html.ParseLinks(doc)
 		if err != nil {
 			log.Warn().Err(err).Str("url", n.Resource).Msg("parse links failed")
-		} else if childs, err := c.CreateEmptyNodes(links, n.Depth+1, n.Resource, startNodes); err != nil {
+		} else if childs, err := c.CreateEmptyNodes(links, n); err != nil {
 			log.Warn().Err(err).Str("url", n.Resource).Msg("create nodes failed")
 		} else {
 			for _, ch := range childs {

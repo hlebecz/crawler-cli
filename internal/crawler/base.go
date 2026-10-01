@@ -3,6 +3,7 @@ package crawler
 import (
 	"errors"
 	"net/url"
+	"sync/atomic"
 
 	"github.com/rs/zerolog/log"
 
@@ -25,19 +26,14 @@ type BaseCrawler struct {
 	Client client.Client
 	Output Output
 	Cache  Cache
+	Count  atomic.Uint64
 }
 
-func (c *BaseCrawler) CreateEmptyNodes(
-	links []string,
-	depth uint,
-	base string,
-	startNodes []*model.Node,
-) ([]model.Node, error) {
-
+func (c *BaseCrawler) CreateEmptyNodes(links []string, n *model.Node) ([]model.Node, error) {
 	nodes := make([]model.Node, 0, len(links))
 
 	for _, l := range links {
-		url, err := parse_html.ResolveURL(base, l)
+		url, err := parse_html.ResolveURL(n.Resource, l)
 		if err != nil {
 			if errors.Is(err, parse_html.ExtError) || errors.Is(err, parse_html.SchemeError) {
 				log.Debug().Err(err).Str("url", l).Msg("skipping url")
@@ -46,28 +42,32 @@ func (c *BaseCrawler) CreateEmptyNodes(
 			}
 		}
 
-		if !c.Cache.ShouldVisit(url) || !c.checkBelonging(url, startNodes) {
+		if !c.Cache.ShouldVisit(url) || !c.checkBelonging(url, n) {
 			continue
 		}
-		nodes = append(nodes, model.NewNode(url, "", depth))
+		nodes = append(nodes, model.NewNode(url, "", n.Depth+1))
 	}
-
+	c.Count.Add(uint64(len(nodes)))
 	return nodes, nil
 }
 
-func (c *BaseCrawler) checkBelonging(s string, startNodes []*model.Node) bool {
+func (c *BaseCrawler) checkBelonging(s string, n *model.Node) bool {
 	u, err := url.Parse(s)
 	if err != nil {
 		return false
 	}
-	for _, n := range startNodes {
-		nodeUrl, err := url.Parse(n.Resource)
-		if err != nil {
-			continue
-		}
-		if nodeUrl.Host == u.Host {
-			return true
-		}
+
+	nodeUrl, err := url.Parse(n.Resource)
+	if err != nil {
+		return false
+	}
+
+	if nodeUrl.Host == u.Host {
+		return true
 	}
 	return false
+}
+
+func (c *BaseCrawler) Total() uint64 {
+	return c.Count.Load()
 }

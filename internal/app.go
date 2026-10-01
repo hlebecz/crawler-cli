@@ -32,15 +32,22 @@ func Run(ctx context.Context, c config.Config) {
 
 	done := make(chan struct{})
 
+	var crawler interface {
+		CrawlAll(ctx context.Context)
+		Total() uint64
+	}
+
+	var count uint64
+
 	go func() {
 		defer close(done)
 		if c.Goroutines == 1 {
-			crawler := recursive.New(c, client, out, cache)
-			crawler.CrawlAll(ctx)
+			crawler = recursive.New(c, client, out, cache)
 		} else {
-			crawler := concurent.New(c, client, out, cache)
-			crawler.CrawlAll(ctx)
+			crawler = concurent.New(c, client, out, cache)
 		}
+		crawler.CrawlAll(ctx)
+		count = crawler.Total()
 	}()
 
 	sig := make(chan os.Signal, 1)
@@ -53,7 +60,7 @@ func Run(ctx context.Context, c config.Config) {
 		cancel()
 		<-done
 	case <-done:
-		log.Info().Msg("crawler is done")
+		log.Info().Msgf("crawler is done, parsed %d nodes", count)
 	}
 
 	err = out.Close()

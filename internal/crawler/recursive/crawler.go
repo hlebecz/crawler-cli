@@ -35,8 +35,10 @@ func (c *Crawler) CrawlAll(ctx context.Context) {
 	startNodes := make([]*model.Node, 0, len(urls))
 
 	for _, u := range urls {
-		node := model.NewNode(u, "", 1)
+		node := model.NewNode(u, "", 0)
 		startNodes = append(startNodes, &node)
+		_ = c.Cache.ShouldVisit(u)
+		c.Count.Add(1)
 		err := c.crawl(ctx, &node, startNodes)
 		if err != nil {
 			if !errors.Is(err, context.Canceled) && !errors.Is(err, context.DeadlineExceeded) {
@@ -83,7 +85,7 @@ func (c *Crawler) crawl(ctx context.Context, n *model.Node, startNodes []*model.
 		log.Warn().Err(err).Str("url", n.Resource).Msg("unable to parse links")
 	}
 
-	childs, err := c.CreateEmptyNodes(links, n.Depth+1, n.Resource, startNodes)
+	childs, err := c.CreateEmptyNodes(links, n)
 	if err != nil {
 		log.Warn().Err(err).Str("url", n.Resource).Msg("unable to create new nodes")
 	}

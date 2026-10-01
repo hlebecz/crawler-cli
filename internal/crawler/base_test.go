@@ -18,11 +18,10 @@ func TestCreateEmptyNodes_KeepsInDomainLinks(t *testing.T) {
 	c := &BaseCrawler{Cache: alwaysVisitCache{}}
 
 	start := model.NewNode("https://example.com", "", 1)
-	startNodes := []*model.Node{&start}
 
 	links := []string{"/about", "/contact"}
 
-	nodes, err := c.CreateEmptyNodes(links, 2, "https://example.com", startNodes)
+	nodes, err := c.CreateEmptyNodes(links, &start)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -35,11 +34,10 @@ func TestCreateEmptyNodes_DropsUnsupportedExtensions(t *testing.T) {
 	c := &BaseCrawler{Cache: alwaysVisitCache{}}
 
 	start := model.NewNode("https://example.com", "", 1)
-	startNodes := []*model.Node{&start}
 
 	links := []string{"/doc.pdf", "/page.html"}
 
-	nodes, err := c.CreateEmptyNodes(links, 2, "https://example.com", startNodes)
+	nodes, err := c.CreateEmptyNodes(links, &start)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -55,9 +53,8 @@ func TestCreateEmptyNodes_SkipsAlreadyVisitedURLs(t *testing.T) {
 	c := &BaseCrawler{Cache: neverVisitCache{}}
 
 	start := model.NewNode("https://example.com", "", 1)
-	startNodes := []*model.Node{&start}
 
-	nodes, err := c.CreateEmptyNodes([]string{"/page"}, 2, "https://example.com", startNodes)
+	nodes, err := c.CreateEmptyNodes([]string{"/page"}, &start)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -70,16 +67,15 @@ func TestCreateEmptyNodes_SetsCorrectDepth(t *testing.T) {
 	c := &BaseCrawler{Cache: alwaysVisitCache{}}
 
 	start := model.NewNode("https://example.com", "", 1)
-	startNodes := []*model.Node{&start}
 
-	nodes, err := c.CreateEmptyNodes([]string{"/page"}, 3, "https://example.com", startNodes)
+	nodes, err := c.CreateEmptyNodes([]string{"/page"}, &start)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if len(nodes) != 1 {
 		t.Fatalf("got %d nodes, want 1", len(nodes))
 	}
-	if nodes[0].Depth != 3 {
-		t.Errorf("Depth = %d, want 3", nodes[0].Depth)
+	if nodes[0].Depth != 2 {
+		t.Errorf("Depth = %d, want 2", nodes[0].Depth)
 	}
 }
