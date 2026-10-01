@@ -2,6 +2,7 @@ package internal
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
@@ -16,13 +17,13 @@ import (
 	"github.com/hlebecz/crawler-cli/internal/crawler/recursive"
 )
 
-func Run(ctx context.Context, c config.Config) {
+func Run(ctx context.Context, c config.Config) error {
 	ctx, cancel := context.WithTimeout(ctx, c.Timeout)
 	defer cancel()
 
 	file, err := os.OpenFile(c.Output, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0o644)
 	if err != nil {
-		log.Fatal().Err(err).Msg("failed to create output file")
+		return fmt.Errorf("failed to create output file: %w", err)
 	}
 	out := fileoutput.New(file)
 
@@ -32,15 +33,22 @@ func Run(ctx context.Context, c config.Config) {
 
 	done := make(chan struct{})
 
+	var crawler interface {
+		CrawlAll(ctx context.Context)
+		Total() uint64
+	}
+
+	var count uint64
+
 	go func() {
 		defer close(done)
 		if c.Goroutines == 1 {
-			crawler := recursive.New(c, client, out, cache)
-			crawler.CrawlAll(ctx)
+			crawler = recursive.New(c, client, out, cache)
 		} else {
-			crawler := concurent.New(c, client, out, cache)
-			crawler.CrawlAll(ctx)
+			crawler = concurent.New(c, client, out, cache)
 		}
+		crawler.CrawlAll(ctx)
+		count = crawler.Total()
 	}()
 
 	sig := make(chan os.Signal, 1)
@@ -53,11 +61,13 @@ func Run(ctx context.Context, c config.Config) {
 		cancel()
 		<-done
 	case <-done:
-		log.Info().Msg("crawler is done")
+		log.Info().Msgf("crawler is done, parsed %d nodes", count)
 	}
 
 	err = out.Close()
 	if err != nil {
-		log.Fatal().Err(err).Msg("failed to close output file")
+		return fmt.Errorf("failed to close output file: %w", err)
 	}
+
+	return nil
 }

@@ -49,6 +49,6 @@ func TestShouldVisit_ConcurrentSafe(t *testing.T) {
 	wg.Wait()
 
 	if trueCount.Load() != 1 {
-		t.Fatalf("expected exactly 1 goroutine to see true, got %d", trueCount)
+		t.Fatalf("expected exactly 1 goroutine to see true, got %d", trueCount.Load())
 	}
 }
