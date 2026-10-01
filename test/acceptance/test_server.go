@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 )
@@ -17,21 +18,25 @@ func serverFromMux(t *testing.T, mux *http.ServeMux) *httptest.Server {
 
 func testMux() *http.ServeMux {
 	mux := http.NewServeMux()
-	page := func(title, link string) http.HandlerFunc {
+	page := func(title string, links []string) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Type", "text/html; charset=utf-8")
-			body := fmt.Sprintf(`<html><head><title>%s</title></head><body>`, title)
-			if link != "" {
-				body += fmt.Sprintf(`<a href="%s">next</a>`, link)
+			var body strings.Builder
+			body.WriteString(fmt.Sprintf(`<html><head><title>%s</title></head><body>`, title))
+			if len(links) > 0 {
+				for _, link := range links {
+					body.WriteString(fmt.Sprintf(`<a href="%s">%s</a>`, link, link))
+				}
 			}
-			body += `</body></html>`
-			fmt.Fprint(w, body)
+			body.WriteString(`</body></html>`)
+			fmt.Fprint(w, body.String())
 		}
 	}
 
-	mux.Handle("/", page("Root", "/child"))
-	mux.Handle("/child", page("Child", "/grandchild"))
-	mux.Handle("/grandchild", page("Grandchild", ""))
+	mux.Handle("/", page("Root", []string{"/child"}))
+	mux.Handle("/child", page("Child", []string{"/grandchild1", "/grandchild2"}))
+	mux.Handle("/grandchild1", page("Grandchild1", []string{}))
+	mux.Handle("/grandchild2", page("Grandchild2", []string{}))
 
 	return mux
 }

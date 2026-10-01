@@ -200,8 +200,10 @@ func TestCrawlDepth_NodeCountAndTreeDepth(t *testing.T) {
 	}{
 		{"concurrent crawler, depth=0 crawls only the seed page", "4", "0", 1, 1},
 		{"concurrent crawler, depth=1 also reaches the seed's direct links", "4", "1", 2, 2},
+		{"concurrent crawler, depth=2 also reaches links-of-links", "4", "2", 4, 3},
 		{"recursive crawler, depth=0 crawls only the seed page", "1", "0", 1, 1},
 		{"recursive crawler, depth=1 also reaches the seed's direct links", "1", "1", 2, 2},
+		{"recursive crawler, depth=2 also reaches links-of-links", "1", "2", 4, 3},
 	}
 
 	for _, tc := range cases {
